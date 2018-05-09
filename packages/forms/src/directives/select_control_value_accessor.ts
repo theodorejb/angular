@@ -102,6 +102,8 @@ export class SelectControlValueAccessor implements ControlValueAccessor {
   _optionMap: Map<string, any> = new Map<string, any>();
   /** @internal */
   _idCounter: number = 0;
+  /** @internal */
+  _timeoutId: any;
 
   onChange = (_: any) => {};
   onTouched = () => {};
@@ -121,11 +123,20 @@ export class SelectControlValueAccessor implements ControlValueAccessor {
   writeValue(value: any): void {
     this.value = value;
     const id: string|null = this._getOptionId(value);
-    if (id == null) {
-      this._renderer.setProperty(this._elementRef.nativeElement, 'selectedIndex', -1);
-    }
     const valueString = _buildValueString(id, value);
     this._renderer.setProperty(this._elementRef.nativeElement, 'value', valueString);
+
+    if (this._timeoutId !== undefined) {
+      clearTimeout(this._timeoutId);
+      this._timeoutId = undefined;
+    }
+
+    if (id === null && valueString !== '' && this._elementRef.nativeElement.value === '') {
+      // workaround for Internet Explorer
+      this._timeoutId = setTimeout(() => {
+        this._renderer.setProperty(this._elementRef.nativeElement, 'selectedIndex', -1);
+      }, 0);
+    }
   }
 
   registerOnChange(fn: (value: any) => any): void {

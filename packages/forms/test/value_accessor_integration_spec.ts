@@ -287,6 +287,35 @@ import {dispatchEvent} from '@angular/platform-browser/testing/src/browser_util'
              expect(buffalo.nativeElement.selected).toBe(true);
            }));
 
+        it('when new options are added but not selected', fakeAsync(() => {
+             if (isNode) return;
+             const fixture = initTest(NgModelSelectForm);
+             const comp = fixture.componentInstance;
+             fixture.detectChanges();
+             tick();
+
+             comp.cities.push({name: 'Minneapolis'});
+             fixture.detectChanges();
+             tick();
+
+             const select = fixture.debugElement.query(By.css('select'));
+             expect(select.nativeElement.selectedIndex).toEqual(-1);
+             const minneapolis = fixture.debugElement.queryAll(By.css('option'))[0];
+             expect(minneapolis.nativeElement.selected).toBe(false);
+           }));
+
+        it('when there is a placeholder option', fakeAsync(() => {
+             if (isNode) return;
+             const fixture = initTest(NgModelSelectWithPlaceholderForm);
+             const comp = fixture.componentInstance;
+             comp.cities = [{'name': 'SF'}, {'name': 'NYC'}];
+             fixture.detectChanges();
+             tick();
+
+             const placeholder = fixture.debugElement.queryAll(By.css('option'))[0];
+             expect(placeholder.nativeElement.selected).toBe(true);
+           }));
+
         it('when options are removed', fakeAsync(() => {
              const fixture = initTest(NgModelSelectForm);
              const comp = fixture.componentInstance;
@@ -1218,6 +1247,21 @@ class FormControlSelectMultipleWithCompareFn {
 })
 class NgModelSelectForm {
   selectedCity: {[k: string]: string} = {};
+  cities: any[] = [];
+}
+
+@Component({
+  selector: 'ng-model-select-placeholder-form',
+  template: `
+    <form #f="ngForm">
+      <select name="city" ngModel>
+        <option value="" disabled>Choose a city</option>
+        <option *ngFor="let c of cities" [ngValue]="c"> {{c.name}} </option>
+      </select>
+    </form>
+  `
+})
+class NgModelSelectWithPlaceholderForm {
   cities: any[] = [];
 }
 
