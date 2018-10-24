@@ -97,6 +97,7 @@ module.exports = function(config) {
       'karma-browserstack-launcher',
       'karma-sauce-launcher',
       'karma-chrome-launcher',
+      'karma-ie-launcher',
       'karma-sourcemap-loader',
     ],
 
@@ -138,7 +139,7 @@ module.exports = function(config) {
       pollingTimeout: 10000,
     },
 
-    browsers: ['Chrome'],
+    browsers: ['Chrome', 'IE'],
 
     port: 9876,
     captureTimeout: 180000,
