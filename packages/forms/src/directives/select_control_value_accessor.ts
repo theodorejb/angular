@@ -95,6 +95,8 @@ export class SelectControlValueAccessor implements ControlValueAccessor {
   _optionMap: Map<string, any> = new Map<string, any>();
   /** @internal */
   _idCounter: number = 0;
+  /** @internal */
+  _timeoutId: any;
 
   /**
    * @description
@@ -126,19 +128,35 @@ export class SelectControlValueAccessor implements ControlValueAccessor {
   constructor(private _renderer: Renderer2, private _elementRef: ElementRef) {}
 
   /**
-   * Sets the "value" property on the input element. The "selectedIndex"
-   * property is also set if an ID is provided on the option element.
+   * Sets the "value" property on the select element.
    *
    * @param value The checked value
    */
   writeValue(value: any): void {
     this.value = value;
-    const id: string|null = this._getOptionId(value);
-    if (id == null) {
-      this._renderer.setProperty(this._elementRef.nativeElement, 'selectedIndex', -1);
+
+    if (this._timeoutId !== undefined) {
+      clearTimeout(this._timeoutId);
+      this._timeoutId = undefined;
     }
-    const valueString = _buildValueString(id, value);
-    this._renderer.setProperty(this._elementRef.nativeElement, 'value', valueString);
+
+    /*
+     * When no option value matches the select value, in order for first option to be deselected
+     * in Safari and Internet Explorer, the select element's value property must be set *after*
+     * the option's child text node is appended to the DOM. setTimeout is a simple way to do this.
+     *
+     * This is also necessary to work around delayed element removal when using animations module.
+     * Otherwise when a selected option is removed (so no option matches the ngModel anymore),
+     * Angular changes the select element value before actually removing the option from the DOM.
+     * Then when the option is finally removed from the DOM, the browser changes the select value
+     * to that of the first option, even though it doesn't match the ngModel.
+     */
+
+    this._timeoutId = setTimeout(() => {
+      const id: string|null = this._getOptionId(value);
+      const valueString = _buildValueString(id, value);
+      this._renderer.setProperty(this._elementRef.nativeElement, 'value', valueString);
+    }, 0);
   }
 
   /**
