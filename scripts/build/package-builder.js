@@ -78,7 +78,8 @@ function buildTargetPackages(destDir, description, isRelease = false) {
   // return is part of the bazel target name and bazel will complain.
   const getTargetsCmd = `${
       bazelCmd} query --output=label "attr('tags', '\\[.*release-with-framework.*\\]', //packages/...) intersect kind('ng_package|pkg_npm', //packages/...)"`;
-  const targets = exec(getTargetsCmd, true).split(/\r?\n/);
+  const targets =
+      exec(getTargetsCmd, true).split(/\r?\n/).filter(v => !v.includes('language-service'));
 
   // If we are in release mode, run `bazel clean` to ensure the execroot and action cache
   // are not populated. This is necessary because targets using `npm_package` rely on
